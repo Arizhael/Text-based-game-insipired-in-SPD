@@ -1,0 +1,104 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        google()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.2'
+    }
+}
+
+allprojects {
+    apply plugin: 'eclipse'
+
+    version = '0.1.0'
+
+    ext {
+        appName = 'firstJavaGame'
+        gdxVersion = findProperty('gdxVersion') ?: '1.13.5'
+        roboVMVersion = '2.3.20'
+        box2DLightsVersion = '1.5'
+        ashleyVersion = '1.7.4'
+        aiVersion = '1.8.2'
+        gdxControllersVersion = '2.2.3'
+    }
+
+    repositories {
+        mavenCentral()
+        google()
+    }
+}
+
+project(':core') {
+    apply plugin: 'java-library'
+
+    dependencies {
+        api "com.badlogicgames.gdx:gdx:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+    }
+}
+
+project(':lwjgl3') {
+    apply plugin: 'java-library'
+
+    dependencies {
+        implementation project(':core')
+        implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+        implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+    }
+
+    tasks.register('run', JavaExec) {
+        dependsOn classes
+        mainClass = 'MiniRPG.lwjgl3.Lwjgl3Launcher'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = rootProject.file('assets')
+        ignoreExitValue = true
+    }
+}
+
+project(':android') {
+    apply plugin: 'com.android.application'
+
+    android {
+        namespace 'MiniRPG.android'
+        compileSdk 35
+
+        defaultConfig {
+            applicationId 'MiniRPG.android'
+            minSdk 21
+            targetSdk 35
+            versionCode 1
+            versionName '0.1.0'
+        }
+
+        sourceSets {
+            main {
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+                java.srcDirs = ['src/main/java']
+                assets.srcDirs = [rootProject.file('assets').absolutePath]
+            }
+        }
+
+        buildTypes {
+            release {
+                minifyEnabled false
+            }
+        }
+
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_17
+            targetCompatibility JavaVersion.VERSION_17
+        }
+    }
+
+    dependencies {
+        implementation project(':core')
+        implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+        implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+        implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
+        implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
+        implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+    }
+}
